@@ -258,10 +258,7 @@ resource "newrelic_cloud_aws_integrations" "newrelic_cloud_integration_pull" {
   sns {}
 }
 
-resource "aws_s3_bucket" "newrelic_configuration_recorder_s3" {
-  bucket        = "newrelic-configuration-recorder-${random_string.s3-bucket-name.id}"
-  force_destroy = true
-}
+
 
 resource "aws_iam_role" "newrelic_configuration_recorder" {
   name               = "newrelic_configuration_recorder-${var.name}"
@@ -283,48 +280,27 @@ EOF
 }
 
 resource "aws_iam_role_policy" "newrelic_configuration_recorder_s3" {
-  name = "newrelic-configuration-recorder-s3-${var.name}"
-  role = aws_iam_role.newrelic_configuration_recorder.id
-
+  // ... existing configurations
   policy = <<POLICY
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.newrelic_configuration_recorder_s3.arn}",
-        "${aws_s3_bucket.newrelic_configuration_recorder_s3.arn}/*"
-      ]
-    }
+  // ... existing configurations
+  "Resource": [
+    "aws-controltower-logs-421038406686-eu-west-2",  // Replace this
+    "aws-controltower-logs-421038406686-eu-west-2/*" // Replace this
   ]
+  // ... existing configurations
 }
 POLICY
 }
+
+
 
 resource "aws_iam_role_policy_attachment" "newrelic_configuration_recorder" {
   role       = aws_iam_role.newrelic_configuration_recorder.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
-resource "aws_config_configuration_recorder" "newrelic_recorder" {
-  name     = "newrelic_configuration_recorder-${var.name}"
-  role_arn = aws_iam_role.newrelic_configuration_recorder.arn
-}
-
-resource "aws_config_configuration_recorder_status" "newrelic_recorder_status" {
-  name       = aws_config_configuration_recorder.newrelic_recorder.name
-  is_enabled = true
-  depends_on = [aws_config_delivery_channel.newrelic_recorder_delivery]
-}
-
 resource "aws_config_delivery_channel" "newrelic_recorder_delivery" {
   name           = "newrelic_configuration_recorder-${var.name}"
-  s3_bucket_name = aws_s3_bucket.newrelic_configuration_recorder_s3.bucket
-  depends_on = [
-    aws_config_configuration_recorder.newrelic_recorder
-  ]
+  s3_bucket_name = "aws-controltower-logs-421038406686-eu-west-2"
 }
